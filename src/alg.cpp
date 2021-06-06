@@ -1,97 +1,103 @@
 // Copyright 2021 NNTU-CS
 #include <string>
-#include "tstack.h"
+#include <stack>
+#include <map>
 
-int prior(char pri) {
-    if (pri == '(')
-        return 0;
-    else if (pri == ')')
-        return 1;
-    else if (pri == '+' || pri == '-')
-        return 2;
-    else if (pri == '*' || pri == '/')
-        return 3;
-    else
-        return -1;
-}
-
-int calс(int num1, int num2, char op) {
-    if (op == '+')
-        return num1 + num2;
-    else if (op == '-')
-        return num1 - num2;
-    else if (op == '*')
-        return num1 * num2;
-    else if (op = '/')
-        return num1 / num2;
-}
 std::string infx2pstfx(std::string inf) {
-    Tstack<char> infWrite;
-    chat top = 0;
-    std::string pst;
-    for (int i = 0; i < inf.length(); i++) {
-        char ch = inf[i];
-        int pri;
-        pri = prior(ch);
-        if (pri > -1) {
-            if ((pri == 0 || pri > prior(top) ||
-                infWrite.isEmpty()) && ch != ')') {
-                if (infWrite.isEmpty())
-                    top = ch;
-                infWrite.push(ch);
+    std::map<char, int> prior = { {'(', 0}, {')', 1},
+        {'+', 2}, {'-', 2}, {'*', 3}, {'/', 3} };
+    std::string res, temp;
+    std::stack<char> stack;
+    for (auto& chr : inf) {
+        if (chr >= '0' && chr <= '9') {
+            temp += chr;
+        }
+        else if (chr == '(' || chr == '+' ||
+            chr == '-' || chr == '*' || chr == '/') {
+            if (temp.length()) {
+                res += temp;
+                res += ' ';
+                temp = "";
             }
-            else if (ch == ')') {
-                while (infWrite.get() != '(') {
-                    pst.push_back(infWrite.get());
-                    pst.push_back(' ');
-                    infWrite.pop();
+            if (!stack.empty()) {
+                if (chr == '(') {
+                    stack.push(chr);
                 }
-                infWrite.pop();
-                if (infWrite.isEmpty())
-                    top = 0;
+                else if (prior[chr] > prior[stack.top()]) {
+                    stack.push(chr);
+                }
+                else {
+                    res += stack.top();
+                    stack.pop();
+                    stack.push(chr);
+                    res += ' ';
+                }
             }
             else {
-                while (!infWrite.isEmpty() &&
-                    prior(infWrite.get()) >= pri)
-                {
-                    pst.push_back(infWrite.get());
-                    pst.push_back(' ');
-                    infWrite.pop();
-                }
-                if (infWrite.isEmpty())
-                    top = inf[i];
-                infWrite.push(inf[i]);
+                stack.push(chr);
             }
         }
-        else {
-            pst.push_back(ch);
-            pst.push_back(' ');
+        else if (chr == ')') {
+            if (temp.length()) {
+                res += temp;
+                res += ' ';
+                temp = "";
+            }
+            if (!stack.empty()) {
+                while (stack.top() != '(') {
+                    res += stack.top();
+                    stack.pop();
+                    res += ' ';
+                }
+                stack.pop();
+            }
         }
     }
-    while (!infWrite.isEmpty()) {
-        pst.push_back(infWrite.get());
-        pst.push_back(' ');
-        infWrite.pop();
+    if (temp.length()) {
+        res += temp;
+        res += ' ';
     }
-    pst.erase(pst.end() - 1, pst.end());
-    return pst;
+    for (unsigned int i = stack.size(); i > 0; i--) {
+        res += stack.top();
+        res += ' ';
+        stack.pop();
+    }
+    res.erase(res.end() - 1, res.end());
+    return res;
 }
 
 int eval(std::string pst) {
-    TStack <int> pst;
-    for (int i = 0; i < pst.size(); i++) {
-        char ch = pst[i];
-        int pri = prior(ch);
-        if (pri == -1)
-            pst.push(ch - 48);
+    unsigned int x = 0, y = 0;
+    std::stack<unsigned int> stack;
+    unsigned int temp = 0;
+    for (unsigned int i = 0; i < pst.length() + 1; i++) {
+        if (pst[i] >= '0' && pst[i] <= '9') {
+            temp *= 10;
+            temp += pst[i] - '0';
+        }
+        else if (pst[i] == ' ') {
+            stack.push(temp);
+            temp = 0;
+        }
         else {
-            int num1 = pst.get();
-            pstStack.pop();
-            int num2 = pst.get();
-            pst.pop();
-            int res = calс(num1, num2, ch);
-            pst.push(res);
+            x = stack.top();
+            stack.pop();
+            y = stack.top();
+            stack.pop();
+            if (pst[i] == '+') {
+                stack.push(y + x);
+            }
+            else if (pst[i] == '-') {
+                stack.push(y - x);
+            }
+            else if (pst[i] == '*') {
+                stack.push(y * x);
+            }
+            else {
+                stack.push(y / x);
+            }
+            i++;
         }
     }
-    return pst.get();
+    return stack.top();
 }
