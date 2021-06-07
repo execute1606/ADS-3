@@ -112,8 +112,7 @@ int eval(std::string pst) {
         if (chr != ' ') {
             if (chr >= '0' && chr <= '9') {
                 stack2.push(chr - 48);
-            }
-            else {
+            } else {
                 first = stack2.get();
                 stack2.pop();
                 second = stack2.get();
